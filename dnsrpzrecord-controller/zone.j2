@@ -1,0 +1,33 @@
+;
+; Generated RPZ zone file
+;
+$TTL        3600
+@           IN      SOA     ns1.localhost. root.localhost. (
+                                {{ serial }} ; Serial
+                                21600        ; Refresh [6h]
+                                600          ; Retry [10m]
+                                604800       ; Expire [1w]
+                                600 )        ; Negative Cache TTL [1h]
+;
+;
+@           IN      NS      ns1.localhost.
+
+{% for ns in dns_resource_record_idx %}
+{% for obj in dns_resource_record_idx[ns] %}
+; - DNSResourceRecord {{ ns }}\{{ obj['metadata']['name'] }}
+{% for record in obj['spec'] %}
+{% if record['type'] == 'Selector' %}
+{% for service in (service_idx[ns] | match_objects_by_labels(record['selector'])) %}
+;   - Service {{ service['metadata']['namespace']}}\{{ service['metadata']['name'] }}
+{% for ingress in (service['status']['loadBalancer']['ingress'] | default([])) %}
+{{ record['name'] | trim('.') }}        IN      A      {{ ingress['ip'] }}
+{% endfor %}
+{% endfor %}
+{% endif %}
+{% if record['type'] == 'CNAME' %}
+{{ record['name'] | trim('.') }}        IN      CNAME  {{ record['data'] | trim('.') }}.
+{% endif %}
+{% endfor %}
+
+{% endfor %}
+{% endfor %}

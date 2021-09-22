@@ -1,0 +1,65 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: dnsrpzrecords.controllers.illallangi.enterprises
+spec:
+  group: controllers.illallangi.enterprises
+  names:
+    kind: DNSRPZRecord
+    plural: dnsrpzrecords
+    shortNames:
+    - dnsrpz
+    singular: dnsrpzrecord
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - description: Age of the DNS Record
+      jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1
+    schema:
+      openAPIV3Schema:
+        properties:
+          status:
+            type: object
+            x-kubernetes-preserve-unknown-fields: true
+          spec:
+            items:
+              oneOf:
+              - properties:
+                  type:
+                    enum:
+                    - A
+                    - CNAME
+                    - PTR
+                    - NS
+                required:
+                - data
+                - name
+              - properties:
+                  type:
+                    enum:
+                    - Selector
+                required:
+                - name
+                - selector
+              properties:
+                data:
+                  type: string
+                name:
+                  type: string
+                selector:
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
+                type:
+                  default: A
+                  type: string
+              type: object
+            type: array
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
