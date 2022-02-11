@@ -115,7 +115,7 @@ spec:
         - mountPath: /etc/coredns/zones
           name: scratch
           readOnly: true
-      - image: docker.io/illallangi/dnsrpzrecord-controller:latest
+      - image: ghcr.io/illallangi/dnsrpzrecord-controller:latest
         imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:
