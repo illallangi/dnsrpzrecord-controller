@@ -1,23 +1,7 @@
 ---
 apiVersion: v1
 data:
-  Corefile: |-
-    .:53 {
-      auto {
-        directory /etc/coredns/zones/ (.*) {1}
-      }
-      errors
-      health :8081 {
-        lameduck 5s
-      }
-      log
-      ready
-      reload
-      loadbalance
-      transfer {
-        to 192.168.0.1
-      }
-    }
+  TRANSFER: 192.0.2.1;203.0.113.2
 kind: ConfigMap
 metadata:
   labels:
@@ -59,10 +43,10 @@ spec:
         app.kubernetes.io/name: dnsrpzrecord
     spec:
       containers:
-      - args:
-        - -conf
-        - /etc/coredns/Corefile
-        image: coredns/coredns:1.8.4
+      - envFrom:
+        - configMapRef:
+            name: dnsrpzrecord-controller
+        image: ghcr.io/illallangi/dnsrpzrecord-coredns:v0.0.3
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 5
@@ -106,13 +90,8 @@ spec:
             - all
           readOnlyRootFilesystem: true
         volumeMounts:
-        - mountPath: /etc/coredns/Corefile
-          name: config
-          readOnly: true
-          subPath: Corefile
-        - mountPath: /etc/coredns/zones
+        - mountPath: /etc/coredns
           name: scratch
-          readOnly: true
       - image: ghcr.io/illallangi/dnsrpzrecord-controller:latest
         imagePullPolicy: IfNotPresent
         livenessProbe:
@@ -125,18 +104,12 @@ spec:
           name: web
           protocol: TCP
         volumeMounts:
-        - mountPath: /etc/coredns/Corefile
-          name: config
-          readOnly: true
-          subPath: Corefile
         - mountPath: /etc/coredns/zones
           name: scratch
+          subPath: zones
       serviceAccount: dnsrpzrecord-controller
       serviceAccountName: dnsrpzrecord-controller
       volumes:
-      - configMap:
-          name: dnsrpzrecord-controller
-        name: config
       - emptyDir: {}
         name: scratch
 ---
